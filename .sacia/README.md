@@ -19,21 +19,65 @@ Skills de ciberseguridad integrados en opencode para auditoria de seguridad auto
 | `professional-report` | Generacion de reportes ejecutivos y tecnicos | `/professional-report --session-dir ./evidence` |
 | `memory_analysis` | Analisis forense de memoria | `/memory_analysis --dump memory.dmp` |
 
-## Requisitos
+## Instalación
 
-### Contenedor Kali Docker
+### 1. Construir e Iniciar el Contenedor Kali
 
-Los skills ejecutan en un contenedor Kali Linux con las herramientas de seguridad instaladas.
+El script de gestión está en `.sacia/docker/sacia-kali.sh`:
 
 ```bash
-# Iniciar contenedor Kali (usar Dockerfile de SACIA-TEST)
-docker run -d --name sacia-kali \
-  -v $(pwd):/workspace/project \
-  -p 8080:8080 \
-  sacia-kali:latest
+cd /path/to/opencode/.sacia/docker
+
+# Construir la imagen (solo la primera vez, ~15 min)
+./sacia-kali.sh build
+
+# Iniciar el contenedor
+./sacia-kali.sh start
+
+# Verificar estado
+./sacia-kali.sh status
+
+# Abrir shell en Kali
+./sacia-kali.sh shell
 ```
 
-**IMPORTANTE:** El contenedor Kali tiene WORKDIR=/workspace y el host esta mapeado a /workspace/project.
+### 2. Inicio Automático al Arrancar el Sistema
+
+El contenedor se puede configurar para iniciarse automáticamente:
+
+```bash
+# Instalar servicio de inicio automático
+./sacia-kali.sh install-auto
+
+# Verificar que el contenedor se inicia automáticamente
+# - macOS: launchd (~/.Library/LaunchAgents/com.sacia.kali.plist)
+# - Linux: systemd (/etc/systemd/system/sacia-kali.service)
+```
+
+Para desinstalar el inicio automático:
+```bash
+./sacia-kali.sh uninstall-auto
+```
+
+### 3. Comandos Disponibles
+
+| Comando | Descripción |
+|---------|-------------|
+| `./sacia-kali.sh build` | Construir la imagen Docker |
+| `./sacia-kali.sh start` | Iniciar el contenedor |
+| `./sacia-kali.sh stop` | Detener el contenedor |
+| `./sacia-kali.sh status` | Ver estado |
+| `./sacia-kali.sh shell` | Abrir shell en Kali |
+| `./sacia-kali.sh exec <cmd>` | Ejecutar comando |
+| `./sacia-kali.sh logs` | Ver logs |
+| `./sacia-kali.sh update` | Actualizar imagen |
+| `./sacia-kali.sh install-auto` | Instalar inicio automático |
+| `./sacia-kali.sh uninstall-auto` | Desinstalar inicio automático |
+
+### Requisitos
+
+- **Docker** instalado y corriendo
+- **~5GB** de espacio en disco (imagen + herramientas)
 
 ### Herramientas Incluidas
 
