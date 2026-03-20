@@ -79,6 +79,12 @@ export namespace Flag {
     const parsed = Number(value)
     return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
   }
+
+  // SACIA Executor flags for Docker Kali integration
+  export const SACIA_EXECUTOR = process.env["SACIA_EXECUTOR"]
+  export const SACIA_EXECUTOR_NETWORK = process.env["SACIA_EXECUTOR_NETWORK"]
+  export const SACIA_KALI_CONTAINER = process.env["SACIA_KALI_CONTAINER"]
+  export const SACIA_KALI_WORKSPACE = process.env["SACIA_KALI_WORKSPACE"]
 }
 
 // Dynamic getter for OPENCODE_DISABLE_PROJECT_CONFIG

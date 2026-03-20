@@ -17,6 +17,7 @@ import { ConfigMarkdown } from "../config/markdown"
 import { Glob } from "../util/glob"
 import { Log } from "../util/log"
 import { Discovery } from "./discovery"
+import { SaciaDocker } from "./sacia-docker"
 
 export namespace Skill {
   const log = Log.create({ service: "skill" })
@@ -124,10 +125,19 @@ export namespace Skill {
     }
 
     const load = async () => {
+      // Track if we found SACIA skills
+      let foundSaciaSkills = false
+
       if (!Flag.OPENCODE_DISABLE_EXTERNAL_SKILLS) {
         for (const dir of EXTERNAL_DIRS) {
           const root = path.join(Global.Path.home, dir)
           if (!(await Filesystem.isDir(root))) continue
+
+          // Check if this is a SACIA directory
+          if (dir === ".sacia") {
+            foundSaciaSkills = true
+          }
+
           await scan(state, root, EXTERNAL_SKILL_PATTERN, { dot: true, scope: "global" })
         }
 
@@ -136,7 +146,23 @@ export namespace Skill {
           start: instance.directory,
           stop: instance.project.worktree,
         })) {
+          // Check if this is a SACIA directory
+          if (root.includes(".sacia")) {
+            foundSaciaSkills = true
+          }
           await scan(state, root, EXTERNAL_SKILL_PATTERN, { dot: true, scope: "project" })
+        }
+      }
+
+      // If we found SACIA skills, ensure Docker container is running
+      if (foundSaciaSkills) {
+        log.info("SACIA skills detected, checking Docker container...")
+        const dockerStatus = await SaciaDocker.ensure()
+        if (!dockerStatus.running) {
+          log.warn("SACIA Docker container not available", { message: dockerStatus.message })
+          // We still continue, skills can still be loaded but commands will fail
+        } else {
+          log.info("SACIA Docker container is running")
         }
       }
 
