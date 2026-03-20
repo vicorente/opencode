@@ -20,7 +20,7 @@ import { SystemPrompt } from "./system"
 import { InstructionPrompt } from "./instruction"
 import { Plugin } from "../plugin"
 import PROMPT_PLAN from "../session/prompt/plan.txt"
-import BUILD_SWITCH from "../session/prompt/build-switch.txt"
+import INTERACTIVE_SWITCH from "../session/prompt/interactive-switch.txt"
 import MAX_STEPS from "../session/prompt/max-steps.txt"
 import { defer } from "../util/defer"
 import { ToolRegistry } from "../tool/registry"
@@ -1361,7 +1361,7 @@ export namespace SessionPrompt {
 
     // Original logic when experimental plan mode is disabled
     if (!Flag.OPENCODE_EXPERIMENTAL_PLAN_MODE) {
-      if (input.agent.name === "plan") {
+      if (input.agent.name === "interactive") {
         userMessage.parts.push({
           id: PartID.ascending(),
           messageID: userMessage.info.id,
@@ -1371,14 +1371,14 @@ export namespace SessionPrompt {
           synthetic: true,
         })
       }
-      const wasPlan = input.messages.some((msg) => msg.info.role === "assistant" && msg.info.agent === "plan")
-      if (wasPlan && input.agent.name === "build") {
+      const wasPlan = input.messages.some((msg) => msg.info.role === "assistant" && msg.info.agent === "interactive")
+      if (wasPlan && input.agent.name === "autonomous") {
         userMessage.parts.push({
           id: PartID.ascending(),
           messageID: userMessage.info.id,
           sessionID: userMessage.info.sessionID,
           type: "text",
-          text: BUILD_SWITCH,
+          text: INTERACTIVE_SWITCH,
           synthetic: true,
         })
       }
@@ -1389,7 +1389,7 @@ export namespace SessionPrompt {
     const assistantMessage = input.messages.findLast((msg) => msg.info.role === "assistant")
 
     // Switching from plan mode to build mode
-    if (input.agent.name !== "plan" && assistantMessage?.info.agent === "plan") {
+    if (input.agent.name !== "interactive" && assistantMessage?.info.agent === "interactive") {
       const plan = Session.plan(input.session)
       const exists = await Filesystem.exists(plan)
       if (exists) {
@@ -1399,7 +1399,7 @@ export namespace SessionPrompt {
           sessionID: userMessage.info.sessionID,
           type: "text",
           text:
-            BUILD_SWITCH + "\n\n" + `A plan file exists at ${plan}. You should execute on the plan defined within it`,
+            INTERACTIVE_SWITCH + "\n\n" + `A plan file exists at ${plan}. You should execute on the plan defined within it`,
           synthetic: true,
         })
         userMessage.parts.push(part)
@@ -1408,7 +1408,7 @@ export namespace SessionPrompt {
     }
 
     // Entering plan mode
-    if (input.agent.name === "plan" && assistantMessage?.info.agent !== "plan") {
+    if (input.agent.name === "interactive" && assistantMessage?.info.agent !== "interactive") {
       const plan = Session.plan(input.session)
       const exists = await Filesystem.exists(plan)
       if (!exists) await fs.mkdir(path.dirname(plan), { recursive: true })

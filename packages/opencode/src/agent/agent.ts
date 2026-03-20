@@ -10,8 +10,10 @@ import { Auth } from "../auth"
 import { ProviderTransform } from "../provider/transform"
 
 import PROMPT_GENERATE from "./generate.txt"
+import PROMPT_AUTONOMOUS from "./prompt/autonomous.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
+import PROMPT_INTERACTIVE from "./prompt/interactive.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { PermissionNext } from "@/permission"
@@ -75,38 +77,40 @@ export namespace Agent {
     const user = PermissionNext.fromConfig(cfg.permission ?? {})
 
     const result: Record<string, Info> = {
-      build: {
-        name: "build",
-        description: "The default agent. Executes tools based on configured permissions.",
+      autonomous: {
+        name: "autonomous",
+        description: "Autonomous cybersecurity agent. Execute security skills automatically. When a user invokes a skill (e.g., 'full-audit example.com'), load and execute its SKILL.md file completely without asking for confirmation unless the skill specifically requires it.",
+        prompt: PROMPT_AUTONOMOUS,
         options: {},
         permission: PermissionNext.merge(
           defaults,
           PermissionNext.fromConfig({
             question: "allow",
-            plan_enter: "allow",
+            bash: "allow",
+            read: "allow",
+            edit: "allow",
+            external_directory: {
+              "*": "allow",
+            },
           }),
           user,
         ),
         mode: "primary",
         native: true,
       },
-      plan: {
-        name: "plan",
-        description: "Plan mode. Disallows all edit tools.",
+      interactive: {
+        name: "interactive",
+        description: "Interactive cybersecurity consultant. Expert guidance for security questions, manual testing procedures, and tool interpretation. Use this mode for conversational assistance with security tasks.",
+        prompt: PROMPT_INTERACTIVE,
         options: {},
         permission: PermissionNext.merge(
           defaults,
           PermissionNext.fromConfig({
             question: "allow",
-            plan_exit: "allow",
-            external_directory: {
-              [path.join(Global.Path.data, "plans", "*")]: "allow",
-            },
-            edit: {
-              "*": "deny",
-              [path.join(".opencode", "plans", "*.md")]: "allow",
-              [path.relative(Instance.worktree, path.join(Global.Path.data, path.join("plans", "*.md")))]: "allow",
-            },
+            bash: "allow",
+            read: "allow",
+            webfetch: "allow",
+            websearch: "allow",
           }),
           user,
         ),
@@ -261,7 +265,7 @@ export namespace Agent {
       await state(),
       values(),
       sortBy(
-        [(x) => (cfg.default_agent ? x.name === cfg.default_agent : x.name === "build"), "desc"],
+        [(x) => (cfg.default_agent ? x.name === cfg.default_agent : x.name === "autonomous"), "desc"],
         [(x) => x.name, "asc"],
       ),
     )

@@ -26,12 +26,12 @@ export const PlanExitTool = Tool.define("plan_exit", {
       sessionID: ctx.sessionID,
       questions: [
         {
-          question: `Plan at ${plan} is complete. Would you like to switch to the build agent and start implementing?`,
-          header: "Build Agent",
+          question: `Plan at ${plan} is complete. Would you like to switch to the autonomous agent and start implementing?`,
+          header: "Autonomous Agent",
           custom: false,
           options: [
-            { label: "Yes", description: "Switch to build agent and start implementing the plan" },
-            { label: "No", description: "Stay with plan agent to continue refining the plan" },
+            { label: "Yes", description: "Switch to autonomous agent and start implementing the plan" },
+            { label: "No", description: "Stay with interactive agent to continue refining the plan" },
           ],
         },
       ],
@@ -50,7 +50,7 @@ export const PlanExitTool = Tool.define("plan_exit", {
       time: {
         created: Date.now(),
       },
-      agent: "build",
+      agent: "autonomous",
       model,
     }
     await Session.updateMessage(userMsg)

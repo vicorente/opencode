@@ -1087,7 +1087,7 @@ export namespace Config {
         .string()
         .optional()
         .describe(
-          "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",
+          "Default agent to use when none is specified. Must be a primary agent. Falls back to 'autonomous' if not set or if the specified agent is invalid.",
         ),
       username: z
         .string()
@@ -1095,8 +1095,8 @@ export namespace Config {
         .describe("Custom username to display in conversations instead of system username"),
       mode: z
         .object({
-          build: Agent.optional(),
-          plan: Agent.optional(),
+          autonomous: Agent.optional(),
+          interactive: Agent.optional(),
         })
         .catchall(Agent)
         .optional()
@@ -1104,8 +1104,8 @@ export namespace Config {
       agent: z
         .object({
           // primary
-          plan: Agent.optional(),
-          build: Agent.optional(),
+          interactive: Agent.optional(),
+          autonomous: Agent.optional(),
           // subagent
           general: Agent.optional(),
           explore: Agent.optional(),
