@@ -48,9 +48,19 @@ process.on("uncaughtException", (e) => {
   })
 })
 
+// Set SACIA executor defaults before any command processing
+// This ensures commands run in the Docker Kali container by default
+if (process.env.SACIA_DISABLE_DOCKER !== "true") {
+  process.env.SACIA_EXECUTOR = process.env.SACIA_EXECUTOR || "docker-kali"
+  process.env.SACIA_EXECUTOR_NETWORK = process.env.SACIA_EXECUTOR_NETWORK || "hybrid"
+}
+
 // Ensure SACIA Docker container is running before proceeding
 // This must be done before any command is processed
 await SaciaDocker.requireAtStartup()
+
+// Check for SACIA base instructions file
+SaciaDocker.checkInstructions()
 
 let cli = yargs(hideBin(process.argv))
   .parserConfiguration({ "populate--": true })
