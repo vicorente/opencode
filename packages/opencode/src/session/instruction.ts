@@ -19,6 +19,8 @@ const FILES = [
 
 function globalFiles() {
   const files = []
+  // SACIA config takes highest priority
+  files.push(path.join(Global.Path.sacia, "AGENTS.md"))
   if (Flag.OPENCODE_CONFIG_DIR) {
     files.push(path.join(Flag.OPENCODE_CONFIG_DIR, "AGENTS.md"))
   }

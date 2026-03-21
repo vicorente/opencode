@@ -1248,6 +1248,13 @@ function UserMessage(props: {
 
   const compaction = createMemo(() => props.parts.find((x) => x.type === "compaction"))
 
+  // Check if the text contains a skill tag and extract skill name
+  const skillMatch = createMemo(() => {
+    const t = text()?.text ?? ""
+    const match = t.match(/^<skill name="([^"]+)">/)
+    return match ? { name: match[1], isSkill: true } : { name: null, isSkill: false }
+  })
+
   return (
     <>
       <Show when={text()}>
@@ -1272,7 +1279,15 @@ function UserMessage(props: {
             backgroundColor={hover() ? theme.backgroundElement : theme.backgroundPanel}
             flexShrink={0}
           >
-            <text fg={theme.text}>{text()?.text}</text>
+            <text fg={theme.text}>{(() => {
+              const t = text()?.text ?? ""
+              // Check if this is a skill content and collapse it
+              const skillMatch = t.match(/^<skill name="([^"]+)">/)
+              if (skillMatch) {
+                return `/${skillMatch[1]}`
+              }
+              return t
+            })()}</text>
             <Show when={files().length}>
               <box flexDirection="row" paddingBottom={metadataVisible() ? 1 : 0} paddingTop={1} gap={1} flexWrap="wrap">
                 <For each={files()}>

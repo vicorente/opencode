@@ -34,6 +34,7 @@ import path from "path"
 import { Global } from "./global"
 import { JsonMigration } from "./storage/json-migration"
 import { Database } from "./storage/db"
+import { SaciaDocker } from "./skill/sacia-docker"
 
 process.on("unhandledRejection", (e) => {
   Log.Default.error("rejection", {
@@ -46,6 +47,10 @@ process.on("uncaughtException", (e) => {
     e: e instanceof Error ? e.message : e,
   })
 })
+
+// Ensure SACIA Docker container is running before proceeding
+// This must be done before any command is processed
+await SaciaDocker.requireAtStartup()
 
 let cli = yargs(hideBin(process.argv))
   .parserConfiguration({ "populate--": true })

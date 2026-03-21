@@ -132,7 +132,8 @@ export namespace Command {
         description: skill.description,
         source: "skill",
         get template() {
-          return skill.content
+          // Wrap skill content in a collapsible marker for TUI
+          return `<skill name="${skill.name}">\n${skill.content}\n</skill>`
         },
         hints: [],
       }

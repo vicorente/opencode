@@ -5,11 +5,13 @@ import os from "os"
 import { Filesystem } from "../util/filesystem"
 
 const app = "opencode"
+const sacia = "sacia"
 
 const data = path.join(xdgData!, app)
 const cache = path.join(xdgCache!, app)
 const config = path.join(xdgConfig!, app)
 const state = path.join(xdgState!, app)
+const saciaConfig = path.join(xdgConfig!, sacia)
 
 export namespace Global {
   export const Path = {
@@ -23,6 +25,7 @@ export namespace Global {
     cache,
     config,
     state,
+    sacia: saciaConfig,
   }
 }
 
