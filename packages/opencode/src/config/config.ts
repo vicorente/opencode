@@ -1238,6 +1238,9 @@ export namespace Config {
   export const global = lazy(async () => {
     let result: Info = pipe(
       {},
+      // SACIA config takes priority (sacia.json in ~/.config/sacia/)
+      mergeDeep(await loadFile(path.join(Global.Path.sacia, "sacia.json"))),
+      // Fallback to opencode configs for compatibility
       mergeDeep(await loadFile(path.join(Global.Path.config, "config.json"))),
       mergeDeep(await loadFile(path.join(Global.Path.config, "opencode.json"))),
       mergeDeep(await loadFile(path.join(Global.Path.config, "opencode.jsonc"))),
@@ -1354,13 +1357,18 @@ export namespace Config {
   }
 
   function globalConfigFile() {
+    // SACIA config takes priority
+    const saciaConfig = path.join(Global.Path.sacia, "sacia.json")
+    if (existsSync(saciaConfig)) return saciaConfig
+
+    // Fallback to opencode configs
     const candidates = ["opencode.jsonc", "opencode.json", "config.json"].map((file) =>
       path.join(Global.Path.config, file),
     )
     for (const file of candidates) {
       if (existsSync(file)) return file
     }
-    return candidates[0]
+    return saciaConfig
   }
 
   function isRecord(value: unknown): value is Record<string, unknown> {
