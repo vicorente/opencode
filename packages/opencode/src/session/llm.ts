@@ -112,17 +112,49 @@ export namespace LLM {
       options.instructions = system.join("\n")
     }
 
-    const messages = isOpenaiOauth
-      ? input.messages
-      : [
-          ...system.map(
-            (x): ModelMessage => ({
-              role: "system",
-              content: x,
-            }),
-          ),
-          ...input.messages,
-        ]
+    // Extract system messages from history and separate from other messages
+    const systemMessagesFromHistory = input.messages.filter((msg) => msg.role === "system")
+    const nonSystemMessages = input.messages.filter((msg) => msg.role !== "system")
+
+    // For OpenAI-compatible providers (llama.cpp, ollama, etc.), combine all system messages into ONE
+    // Some providers like llama.cpp with qwen template require exactly ONE system message at the start
+    // For Anthropic and others, keep multiple system messages for proper caching behavior
+    const isOpenAICompatible = input.model.api.npm === "@ai-sdk/openai-compatible"
+
+    let messages: ModelMessage[]
+    if (isOpenaiOauth) {
+      // OpenAI OAuth uses instructions option instead of system messages
+      messages = input.messages
+    } else if (isOpenAICompatible && (systemMessagesFromHistory.length > 0 || system.length > 0)) {
+      // Combine all system content into a single message for OpenAI-compatible providers
+      const historySystemContent = systemMessagesFromHistory
+        .map((msg) => (typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content)))
+        .join("\n\n")
+
+      const newSystemContent = system.join("\n\n")
+
+      const combinedSystemContent = [historySystemContent, newSystemContent].filter((x) => x).join("\n\n")
+
+      messages = [
+        {
+          role: "system",
+          content: combinedSystemContent,
+        },
+        ...nonSystemMessages,
+      ]
+    } else {
+      // Keep multiple system messages for providers that support it (Anthropic, etc.)
+      messages = [
+        ...systemMessagesFromHistory,
+        ...system.map(
+          (x): ModelMessage => ({
+            role: "system",
+            content: x,
+          }),
+        ),
+        ...nonSystemMessages,
+      ]
+    }
 
     const params = await Plugin.trigger(
       "chat.params",
