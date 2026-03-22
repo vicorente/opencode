@@ -11,36 +11,47 @@ NC='\033[0m' # No Color
 
 usage() {
     cat <<EOF
-OpenCode Local Installer
+Sacia Local Installer
 
-Compiles and installs opencode from source code.
+Compiles and installs sacia from source code.
 
 Usage: install_local.sh [options]
 
 Options:
     -h, --help              Display this help message
-    -p, --prefix <dir>      Install directory (default: ~/.opencode/bin)
+    -v, --version <version> Use a specific version string (default: 0.0.0-dev-TIMESTAMP)
+    -p, --prefix <dir>      Install directory (default: ~/.sacia/bin)
     -o, --output <dir>      Copy binary to specific location after build
         --no-modify-path    Don't modify shell config files (.zshrc, .bashrc, etc.)
         --skip-deps         Skip dependency installation (bun install)
 
 Examples:
-    ./install_local.sh                    # Build and install to ~/.opencode/bin
+    ./install_local.sh                    # Build and install to ~/.sacia/bin
     ./install_local.sh -o ~/.bun/bin      # Build and copy to ~/.bun/bin
     ./install_local.sh --no-modify-path   # Build without modifying PATH
 EOF
 }
 
-install_dir="$HOME/.opencode/bin"
+install_dir="$HOME/.sacia/bin"
 output_dir=""
 no_modify_path=false
 skip_deps=false
+requested_version=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             usage
             exit 0
+            ;;
+        -v|--version)
+            if [[ -n "${2:-}" ]]; then
+                requested_version="$2"
+                shift 2
+            else
+                echo -e "${RED}Error: --version requires a version argument${NC}"
+                exit 1
+            fi
             ;;
         -p|--prefix)
             if [[ -n "${2:-}" ]]; then
@@ -75,8 +86,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Generate dev version with timestamp
-DEV_VERSION="0.0.0-dev-$(date +%Y%m%d%H%M)"
+# Generate dev version with timestamp if not specified
+if [ -z "$requested_version" ]; then
+    DEV_VERSION="0.0.0-dev-$(date +%Y%m%d%H%M)"
+else
+    DEV_VERSION="$requested_version"
+fi
 
 # Detect OS and architecture
 raw_os=$(uname -s)
@@ -136,7 +151,7 @@ if [ ! -d "$PACKAGE_DIR" ]; then
     exit 1
 fi
 
-print_message info "\n${MUTED}Building ${NC}opencode ${MUTED}from source${NC}"
+print_message info "\n${MUTED}Building ${NC}sacia ${MUTED}from source${NC}"
 print_message info "${MUTED}Version: ${NC}$DEV_VERSION"
 print_message info "${MUTED}Platform: ${NC}$os-$arch"
 echo ""
@@ -164,9 +179,9 @@ done
 # Find the built binary
 binary_name="$APP-$os-$arch"
 if [ "$os" = "windows" ]; then
-    binary_path="$PACKAGE_DIR/dist/$binary_name/bin/opencode.exe"
+    binary_path="$PACKAGE_DIR/dist/$binary_name/bin/sacia.exe"
 else
-    binary_path="$PACKAGE_DIR/dist/$binary_name/bin/opencode"
+    binary_path="$PACKAGE_DIR/dist/$binary_name/bin/sacia"
 fi
 
 if [ ! -f "$binary_path" ]; then
@@ -185,21 +200,21 @@ mkdir -p "$install_dir"
 
 # Install to primary location
 print_message info "\n${MUTED}Installing to ${NC}$install_dir"
-cp "$binary_path" "$install_dir/opencode"
-chmod 755 "$install_dir/opencode"
+cp "$binary_path" "$install_dir/sacia"
+chmod 755 "$install_dir/sacia"
 
 # Copy to output directory if specified
 if [ -n "$output_dir" ]; then
     print_message info "${MUTED}Copying to ${NC}$output_dir"
     mkdir -p "$output_dir"
-    cp "$binary_path" "$output_dir/opencode"
-    chmod 755 "$output_dir/opencode"
+    cp "$binary_path" "$output_dir/sacia"
+    chmod 755 "$output_dir/sacia"
 fi
 
 print_message success "\n${GREEN}✓${NC} Installation complete!"
 
 # Verify installation
-installed_version=$("$install_dir/opencode" --version 2>/dev/null || echo "unknown")
+installed_version=$("$install_dir/sacia" --version 2>/dev/null || echo "unknown")
 print_message info "${MUTED}Installed version: ${NC}$installed_version"
 
 # Add to PATH if requested
@@ -210,9 +225,9 @@ add_to_path() {
     if grep -Fxq "$command" "$config_file"; then
         print_message info "Command already exists in $config_file, skipping write."
     elif [[ -w $config_file ]]; then
-        echo -e "\n# opencode" >> "$config_file"
+        echo -e "\n# sacia" >> "$config_file"
         echo "$command" >> "$config_file"
-        print_message info "${MUTED}Successfully added ${NC}opencode ${MUTED}to \$PATH in ${NC}$config_file"
+        print_message info "${MUTED}Successfully added ${NC}sacia ${MUTED}to \$PATH in ${NC}$config_file"
     else
         print_message warning "Manually add the directory to $config_file (or similar):"
         print_message info "  $command"
@@ -271,21 +286,22 @@ if [[ "$no_modify_path" != "true" ]]; then
         esac
     fi
 fi
-
 echo ""
-echo -e "${MUTED}                   ${NC}             ▄     "
-echo -e "${MUTED}█▀▀█ █▀▀█ █▀▀█ █▀▀▄ ${NC}█▀▀▀ █▀▀█ █▀▀█ █▀▀█"
-echo -e "${MUTED}█░░█ █░░█ █▀▀▀ █░░█ ${NC}█░░░ █░░█ █░░█ █▀▀▀"
-echo -e "${MUTED}▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀  ▀ ${NC}▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀"
+echo -e "${MUTED} ██████╗  █████═╗  ██████╗  ██╗  █████═╗ ${NC}",
+echo -e "${MUTED}██╔════╝ ██╔══██╗ ██╔════╝  ██║ ██╔══██╗${NC}",
+echo -e "${MUTED}███████╗ ███████║ ██║       ██║ ███████║${NC}",
+echo -e "${MUTED}╚════██║ ██╔══██║ ██║       ██║ ██╔══██║${NC}",
+echo -e "${MUTED}███████║ ██║  ██║ ╚██████╗  ██║ ██║  ██║${NC}",
+echo -e "${MUTED}╚══════╝ ╚═╝  ╚═╝  ╚═════╝  ╚═╝ ╚═╝  ╚═╝${NC}",
 echo ""
-echo -e "${GREEN}Dev build installed successfully!${NC}"
+echo -e "${GREEN}SACIA dev build installed successfully!${NC}"
 echo ""
 echo -e "${MUTED}To start:${NC}"
 echo -e "cd <project>  ${MUTED}# Open directory${NC}"
-echo -e "opencode      ${MUTED}# Run command${NC}"
+echo -e "sacia         ${MUTED}# Run command${NC}"
 echo ""
 
 if [ -n "$output_dir" ]; then
-    echo -e "${MUTED}Binary also available at: ${NC}$output_dir/opencode"
+    echo -e "${MUTED}Binary also available at: ${NC}$output_dir/sacia"
     echo ""
 fi

@@ -469,6 +469,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
+# PDF GENERATION - Pandoc + LaTeX para informes profesionales
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Pandoc - Conversor universal de documentos
+    pandoc \
+    # LaTeX engine para PDFs de alta calidad
+    texlive-xetex \
+    texlive-fonts-recommended \
+    texlive-plain-generic \
+    texlive-latex-extra \
+    texlive-latex-recommended \
+    # Fuentes profesionales
+    fonts-liberation \
+    fonts-noto \
+    fonts-dejavu \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "✓ Pandoc + LaTeX installed"
+
+# Script para convertir Markdown a PDF profesional
+RUN echo '#!/bin/bash' > /usr/local/bin/md2pdf && \
+    echo 'INPUT="$1"' >> /usr/local/bin/md2pdf && \
+    echo 'OUTPUT="${2:-${INPUT%.md}.pdf}"' >> /usr/local/bin/md2pdf && \
+    echo 'pandoc "$INPUT" -o "$OUTPUT" --pdf-engine=xelatex -V geometry:margin=1in -V mainfont="DejaVu Sans" -V monofont="DejaVu Sans Mono" --highlight-style=tango' >> /usr/local/bin/md2pdf && \
+    echo 'echo "✓ PDF generado: $OUTPUT"' >> /usr/local/bin/md2pdf && \
+    chmod +x /usr/local/bin/md2pdf && \
+    echo "✓ md2pdf script created"
+
+# Script para convertir Markdown a HTML (alternativa rápida)
+RUN echo '#!/bin/bash' > /usr/local/bin/md2html && \
+    echo 'INPUT="$1"' >> /usr/local/bin/md2html && \
+    echo 'OUTPUT="${2:-${INPUT%.md}.html}"' >> /usr/local/bin/md2html && \
+    echo 'pandoc "$INPUT" -o "$OUTPUT" --standalone --metadata title="SACIA Security Report" --css=/workspace/report/style.css 2>/dev/null || pandoc "$INPUT" -o "$OUTPUT" --standalone' >> /usr/local/bin/md2html && \
+    echo 'echo "✓ HTML generado: $OUTPUT"' >> /usr/local/bin/md2html && \
+    chmod +x /usr/local/bin/md2html && \
+    echo "✓ md2html script created"
+
+# =============================================================================
 # DIRECTORIOS DE TRABAJO
 # =============================================================================
 RUN mkdir -p /workspace /output /reports

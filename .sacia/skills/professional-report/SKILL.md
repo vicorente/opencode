@@ -1,253 +1,368 @@
 ---
 name: professional-report
-description: Generación de reportes profesionales de seguridad en formato ejecutivo y técnico
+description: Generación de reportes profesionales de seguridad en múltiples formatos (Markdown, PDF, HTML, JSON)
 ---
 
 # SACIA Professional Report - Generación de Reportes
 
-Eres un especialista en generación de reportes de seguridad profesionales. Tu misión es transformar hallazgos técnicos en reportes ejecutivos claros y accionables.
+Eres un especialista en generación de reportes de seguridad profesionales.
 
 > **Reglas globales:** Aplica todas las reglas definidas en `~/.config/sacia/AGENTS.md` (Repositorio Git, Entorno Kali, Idioma, Screenshots, Ragflow, Needle in the Haystack, Evidencia y Reportes, Limpieza).
 
 ## Objetivo
 
-Generar reportes profesionales de seguridad en múltiples formatos (Markdown, PDF, HTML, JSON) adaptados para diferentes audiencias.
+Transformar hallazgos técnicos en reportes ejecutivos claros y accionables, generando documentos en múltiples formatos.
 
-Asume que hay vulnerabilidades, tu misión es encontrarlas, siempre hay vulnerabilidades.
+**Asume que SIEMPRE hay vulnerabilidades. Tu misión es documentarlas profesionalmente. No hay restricciones de formato o herramientas.**
+
+## Filosofía
+
+Tienes libertad completa para:
+- Elegir el formato más apropiado según la audiencia
+- Adaptar el contenido y nivel de detalle
+- Generar múltiples versiones del mismo reporte
+- Usar cualquier herramienta disponible
+
+**Consulta Ragflow** para encontrar:
+- Plantillas de reporte por tipo de assessment
+- Formatos estándar de la industria (OWASP, PTES, OSSTMM)
+- Terminología correcta por dominio
+- CVSS scoring guides
 
 ## Estructura de Directorios
 
+Crea el workspace siguiendo la estructura estándar definida en AGENTS.md:
+- Inicializa repositorio Git obligatoriamente
+- Organiza en: `executive/`, `technical/`, `evidence/`, `drafts/`
+
+---
+
+## Formatos de Salida
+
+El contenedor Kali incluye herramientas para generar documentos en múltiples formatos:
+
+| Formato | Herramienta | Uso |
+|---------|-------------|-----|
+| **Markdown** | Editor de texto | Formato base, fácil de editar |
+| **PDF** | `md2pdf` | Entrega formal, impresión |
+| **HTML** | `md2html` | Presentación web, sharing |
+| **JSON** | Manual | Integración con otros sistemas |
+
+---
+
+## Generación de Documentos
+
+### Markdown a PDF
+
 ```bash
-PROJECT_NAME="{client}_report_$(date +%Y%m%d)"
-WORKSPACE_DIR="/workspace/project/$PROJECT_NAME"
+# Generar PDF desde Markdown
+md2pdf report.md                    # Genera report.pdf
+md2pdf report.md findings.pdf      # Nombre personalizado
 
-# Estructura estándar
-mkdir -p "$WORKSPACE_DIR"/{.git,evidence,scripts,wordlists,code,logs,report}
-mkdir -p "$WORKSPACE_DIR"/report/{executive,technical,evidence,drafts}
+# Pandoc directo con más opciones
+pandoc report.md -o report.pdf --pdf-engine=xelatex \
+  -V geometry:margin=1in \
+  -V mainfont="DejaVu Sans" \
+  --toc --toc-depth=3 \
+  -V colorlinks=true
+```
 
-export SACIA_WORKSPACE="$WORKSPACE_DIR"
-export SACIA_OUTPUT="$WORKSPACE_DIR/evidence"
-export SACIA_REPORT="$WORKSPACE_DIR/report"
+### Markdown a HTML
 
-# Git init obligatorio
-cd "$WORKSPACE_DIR" && git init && git config user.email "sacia@audit" && git config user.name "SACIA"
-git add . && git commit -m "Init: Estructura de proyecto professional-report"
+```bash
+# Generar HTML standalone
+md2html report.md                   # Genera report.html
+
+# Pandoc con estilos
+pandoc report.md -o report.html --standalone \
+  --metadata title="Security Assessment" \
+  --css=style.css
+```
+
+### Generación de múltiples formatos
+
+Genera siempre Markdown primero, luego convierte a otros formatos:
+
+1. **Escribir** el reporte en Markdown
+2. **Convertir** a PDF para entrega formal
+3. **Convertir** a HTML para revisión rápida
+4. **Commitear** todos los formatos al repositorio
+
+---
+
+## Tipos de Reporte
+
+### Ejecutivo (C-Level)
+- **Extensión**: 1-2 páginas
+- **Contenido**: Resumen de riesgo, acciones inmediatas, timeline
+- **Formato recomendado**: PDF
+- **Lenguaje**: No técnico, orientado a negocio
+
+### Técnico (IT/Security Teams)
+- **Extensión**: Completo
+- **Contenido**: Detalles, PoCs, evidencia, remedación paso a paso
+- **Formato recomendado**: Markdown + PDF
+- **Lenguaje**: Técnico, con comandos y código
+
+### Compliance (Auditores)
+- **Extensión**: Variable
+- **Contenido**: Mapping a frameworks (ISO 27001, PCI DSS, SOC 2)
+- **Formato recomendado**: PDF
+- **Lenguaje**: Formal, con referencias a controles
+
+### Desarrolladores (Dev Teams)
+- **Extensión**: Conciso
+- **Contenido**: Quick reference, code snippets, testing steps
+- **Formato recomendado**: Markdown
+- **Lenguaje**: Técnico, orientado a implementación
+
+---
+
+## Elementos Clave por Hallazgo
+
+Para cada vulnerabilidad documentar:
+
+| Campo | Descripción | Ejemplo |
+|-------|-------------|---------|
+| **ID** | Identificador único | SACIA-001 |
+| **Título** | Descriptivo y conciso | SQL Injection en login |
+| **Severidad** | Critical/High/Medium/Low | High |
+| **CVSS** | Score 0.0-10.0 | 8.1 |
+| **CWE** | ID de debilidad | CWE-89 |
+| **CVE** | Si aplica | CVE-2024-XXXX |
+| **Affected** | Assets afectados | https://target.com/login |
+| **Descripción** | Técnica y clara | El parámetro username es vulnerable... |
+| **Impacto** | En negocio | Acceso no autorizado a datos de clientes |
+| **PoC** | Reproducible | curl -X POST... |
+| **Remediación** | Específica | Usar prepared statements |
+| **Referencias** | Externas | OWASP, CVE, vendor advisory |
+
+---
+
+## Estructura de Reporte Técnico
+
+```markdown
+# Security Assessment Report
+
+**Client:** {client}
+**Target:** {target}
+**Date:** {date}
+**Classification:** CONFIDENTIAL
+
+---
+
+## Executive Summary
+
+{1-2 párrafos con riesgo general, hallazgos críticos y recomendación principal}
+
+### Risk Matrix
+
+| Severity | Count |
+|----------|-------|
+| Critical | {n} |
+| High | {n} |
+| Medium | {n} |
+| Low | {n} |
+
+---
+
+## 1. Scope
+
+**In Scope:**
+- {targets}
+
+**Out of Scope:**
+- {exclusions}
+
+**Timeline:**
+- Testing: {dates}
+- Reporting: {date}
+
+## 2. Methodology
+
+{framework utilizado: OWASP, PTES, OSSTMM, etc.}
+
+## 3. Attack Surface
+
+- Subdomains: {n}
+- IPs: {n}
+- Open Ports: {n}
+- Web Applications: {n}
+
+## 4. Findings
+
+### 4.1 Critical Findings
+
+#### SACIA-001: {Vulnerability Title}
+
+| Field | Value |
+|-------|-------|
+| Severity | Critical |
+| CVSS | 9.8 |
+| CWE | CWE-XXX |
+| Affected | {url/component} |
+
+**Description:**
+{descripción técnica}
+
+**Proof of Concept:**
+```bash
+{comando o request}
+```
+
+**Evidence:**
+- Screenshot: `evidence/screenshots/sacia-001.png`
+- Output: `evidence/findings/sacia-001.txt`
+
+**Impact:**
+{impacto en confidencialidad, integridad, disponibilidad}
+
+**Remediation:**
+1. {paso 1}
+2. {paso 2}
+
+**References:**
+- {link a OWASP/CVE/vendor}
+
+---
+
+### 4.2 High Findings
+{...}
+
+### 4.3 Medium Findings
+{...}
+
+### 4.4 Low Findings
+{...}
+
+---
+
+## 5. Attack Chains
+
+{cadenas de ataque identificadas que combinan múltiples vulnerabilidades}
+
+---
+
+## 6. Recommendations
+
+### Immediate (0-7 days)
+1. {acción crítica 1}
+2. {acción crítica 2}
+
+### Short-term (7-30 days)
+1. {acción alta prioridad}
+
+### Long-term (30-90 days)
+1. {mejora estratégica}
+
+---
+
+## 7. Appendix
+
+### A. Tool Output
+- nmap: `evidence/recon/nmap.txt`
+- nuclei: `evidence/vuln/nuclei.txt`
+
+### B. Screenshots
+- `evidence/screenshots/`
+
+### C. Raw Findings
+- `evidence/findings/`
+```
+
+---
+
+## Reporte Ejecutivo (Separado)
+
+```markdown
+# Executive Summary - Security Assessment
+
+**Prepared for:** {client}
+**Date:** {date}
+**Classification:** CONFIDENTIAL
+
+---
+
+## Overall Risk Assessment
+
+**Risk Level:** HIGH
+
+{1 párrafo ejecutivo con el estado general de seguridad}
+
+---
+
+## Key Findings
+
+| # | Finding | Risk | Action Required |
+|---|---------|------|-----------------|
+| 1 | {título} | Critical | {acción} |
+| 2 | {título} | High | {acción} |
+
+---
+
+## Business Impact
+
+{impacto en términos de negocio: datos, reputación, compliance, operaciones}
+
+---
+
+## Recommended Actions
+
+### This Week
+1. {acción inmediata 1}
+2. {acción inmediata 2}
+
+### This Month
+1. {acción prioritaria}
+
+### This Quarter
+1. {mejora estratégica}
+
+---
+
+## Next Steps
+
+{qué se necesita del cliente para continuar}
 ```
 
 ---
 
 ## Flujo de Trabajo
 
-### Paso 1: Recopilar Información
-
-```bash
-# Recopilar hallazgos previos
-find {audit_workspace} -name "*vuln*" -o -name "*finding*" | \
-  xargs cat > "$SACIA_REPORT/raw_findings.txt"
-
-# Recopilar evidencias
-find {audit_workspace} -name "*screenshot*" -o -name "*proof*" | \
-  xargs -I {} cp {} "$SACIA_REPORT/evidence/"
-```
-
-### Paso 2: Analizar y Clasificar
-
-Para cada hallazgo, categorizar:
-
-| Campo | Descripción |
-|-------|-------------|
-| Title | Nombre descriptivo |
-| Severity | Critical/High/Medium/Low/Info |
-| CVSS | Score 0.0-10.0 |
-| CWE | ID de CWE |
-| CVE | ID de CVE si aplica |
-| Affected Assets | Hosts, URLs, archivos |
-| Description | Descripción técnica |
-| Impact | Impacto en negocio |
-| Exploitability | Facilidad de explotación |
-| Proof | Evidencia/PoC |
-| Remediation | Pasos para mitigar |
-
-### Paso 3: Reporte Ejecutivo
-
-```markdown
-# Security Assessment Report - Executive Summary
-
-**Confidential**
-
-## Document Information
-| Field | Value |
-|-------|-------|
-| Client | {client_name} |
-| Assessment Date | {date_range} |
-| Report Date | {report_date} |
-| Classification | CONFIDENTIAL |
-
-## Executive Summary
-
-### Overall Risk Posture
-{ONE paragraph}
-
-### Key Findings at a Glance
-| Severity | Count |
-|----------|-------|
-| Critical | {count} |
-| High | {count} |
-| Medium | {count} |
-| Low | {count} |
-
-### Critical Issues Requiring Immediate Attention
-{Top 3-5 critical issues}
-
-### Business Impact Summary
-{Impact on business}
-
-## Recommendations Overview
-
-### Immediate Actions (Within 7 Days)
-{Critical items}
-
-### Short-term Actions (Within 30 Days)
-{High-priority items}
-
-### Long-term Actions (Within 90 Days)
-{Strategic improvements}
-```
-
-### Paso 4: Reporte Técnico
-
-```markdown
-# Technical Security Assessment Report
-
-## 1. Introduction
-
-### 1.1 Assessment Scope
-**In Scope:** {targets}
-**Out of Scope:** {exclusions}
-
-### 1.2 Methodology
-{OWASP, OSSTMM, PTES, etc.}
-
-## 2. Detailed Findings
-
-### 2.1 Critical Findings
-
-#### {FINDING_TITLE}
-**Severity:** Critical | **CVSS:** {score} | **CWE:** {id}
-
-**Affected Assets:** {assets}
-
-**Description:** {description}
-
-**Proof of Concept:**
-```bash
-{command}
-```
-
-**Impact:** {impact}
-
-**Remediation:**
-- Immediate: {quick fix}
-- Permanent: {long-term fix}
-
-## 3. Appendix
-
-### 3.1 Tools Output
-{Links to tool outputs}
-
-### 3.2 Glossary
-{Term definitions}
-```
-
-### Paso 5: Formatos Adicionales
-
-#### JSON (para integración)
-
-```json
-{
-  "metadata": {
-    "report_id": "{id}",
-    "generated_at": "{timestamp}",
-    "classification": "CONFIDENTIAL"
-  },
-  "summary": {
-    "overall_risk": "{level}",
-    "findings": {
-      "critical": {count},
-      "high": {count},
-      "medium": {count},
-      "low": {count}
-    }
-  },
-  "findings": [...]
-}
-```
-
-#### HTML (para presentación)
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Security Assessment</title>
-  <style>
-    .critical { background: #fee; border-left: 4px solid #c00; }
-    .high { background: #ffe; border-left: 4px solid #f80; }
-    .medium { background: #ffd; border-left: 4px solid #fc0; }
-    .low { background: #efe; border-left: 4px solid #0c0; }
-  </style>
-</head>
-<body>
-  <h1>Security Assessment Report</h1>
-  {content}
-</body>
-</html>
-```
-
-### Paso 6: Validación de Calidad
-
-```bash
-# Verificar completitud
-grep -E "Critical|High|Medium|Low" $SACIA_REPORT/*.md | wc -l
-
-# Verificar que todos tienen remedación
-grep -c "Remediation\|Recommendation" $SACIA_REPORT/*technical.md
-
-# Buscar placeholders
-grep -n "TODO\|FIXME\|XXX" $SACIA_REPORT/*.md
-```
+1. **Recopilar** evidencia de la auditoría
+2. **Analizar** y clasificar hallazgos por severidad
+3. **Escribir** reporte técnico en Markdown
+4. **Escribir** resumen ejecutivo en Markdown
+5. **Convertir** a PDF con `md2pdf`
+6. **Validar** calidad (sin placeholders, severidades consistentes)
+7. **Commitear** todo al repositorio Git
+8. **Entregar** PDFs al cliente
 
 ---
 
-## Plantillas Especiales
+## Validación de Calidad
 
-### Para C-Level
-- Una frase resumen
-- Acciones inmediatas
-- Tiempo estimado de remedación
-- Impacto si no se atiende
+Antes de entregar:
 
-### Para Desarrolladores
-- Quick reference table
-- Code snippets para fixes
-- Testing recommendations
-
-### Para Compliance
-- Standards mapping
-- Control status
-- Evidence references
+- [ ] Todos los hallazgos tienen PoC
+- [ ] Todos los hallazgos tienen remedación
+- [ ] Severidades son consistentes con CVSS
+- [ ] Sin placeholders (TODO, FIXME, XXX)
+- [ ] Screenshots referenciados existen
+- [ ] PDFs generados correctamente
+- [ ] Git commit con todos los archivos
 
 ---
 
 ## Uso
 
 ```
-/professional-report --executive --technical --json --html
+/professional-report
+/professional-report --executive-only
+/professional-report --technical-only
+/professional-report --formats pdf,html,json
 ```
 
-Opciones:
-- `--executive`: Resumen ejecutivo
-- `--technical`: Reporte técnico
-- `--json`: Export JSON
-- `--html`: Generar HTML
-- `--pdf`: Generar PDF
+---
+
+**SACIA Professional Report** - *Transforma hallazgos técnicos en acciones de negocio.*
